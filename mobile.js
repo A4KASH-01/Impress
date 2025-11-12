@@ -18,6 +18,8 @@ class Paper {
   rotating = false;
 
   init(paper) {
+
+    // ======== TOUCH MOVE ========
     paper.addEventListener('touchmove', (e) => {
       e.preventDefault();
       if(!this.rotating) {
@@ -51,8 +53,9 @@ class Paper {
 
         paper.style.transform = `translateX(${this.currentPaperX}px) translateY(${this.currentPaperY}px) rotateZ(${this.rotation}deg)`;
       }
-    })
+    });
 
+    // ======== TOUCH START ========
     paper.addEventListener('touchstart', (e) => {
       if(this.holdingPaper) return; 
       this.holdingPaper = true;
@@ -65,12 +68,14 @@ class Paper {
       this.prevTouchX = this.touchStartX;
       this.prevTouchY = this.touchStartY;
     });
+
+    // ======== TOUCH END ========
     paper.addEventListener('touchend', () => {
       this.holdingPaper = false;
       this.rotating = false;
     });
 
-    // For two-finger rotation on touch screens
+    // ======== TWO-FINGER ROTATION ========
     paper.addEventListener('gesturestart', (e) => {
       e.preventDefault();
       this.rotating = true;
@@ -78,11 +83,41 @@ class Paper {
     paper.addEventListener('gestureend', () => {
       this.rotating = false;
     });
+
+
+    // ======== MOUSE SUPPORT (for PC) ========
+    paper.addEventListener('mousedown', (e) => {
+      this.holdingPaper = true;
+      paper.style.zIndex = highestZ++;
+      this.touchStartX = e.clientX;
+      this.touchStartY = e.clientY;
+      this.prevTouchX = this.touchStartX;
+      this.prevTouchY = this.touchStartY;
+    });
+
+    paper.addEventListener('mousemove', (e) => {
+      if(!this.holdingPaper || this.rotating) return;
+      this.touchMoveX = e.clientX;
+      this.touchMoveY = e.clientY;
+      this.velX = this.touchMoveX - this.prevTouchX;
+      this.velY = this.touchMoveY - this.prevTouchY;
+      this.currentPaperX += this.velX;
+      this.currentPaperY += this.velY;
+      this.prevTouchX = this.touchMoveX;
+      this.prevTouchY = this.touchMoveY;
+      paper.style.transform = `translateX(${this.currentPaperX}px) translateY(${this.currentPaperY}px) rotateZ(${this.rotation}deg)`;
+    });
+
+    paper.addEventListener('mouseup', () => {
+      this.holdingPaper = false;
+    });
+    paper.addEventListener('mouseleave', () => {
+      this.holdingPaper = false;
+    });
   }
 }
 
 const papers = Array.from(document.querySelectorAll('.paper'));
-
 papers.forEach(paper => {
   const p = new Paper();
   p.init(paper);
